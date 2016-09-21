@@ -17,16 +17,46 @@
   display: none;
 }
 
+.d3-tip {
+  line-height: 1;
+  font-weight: bold;
+  padding: 5px;
+  background: #D3D3D3;
+  color: #fff;
+  border-radius: 2px;
+}
+
+/* Creates a small triangle extender for the tooltip */
+.d3-tip:after {
+  box-sizing: border-box;
+  display: inline;
+  font-size: 10px;
+  width: 100%;
+  line-height: 1;
+  color: #D3D3D3;
+  content: "\25BC";
+  position: absolute;
+  text-align: center;
+}
+
+/* Style northward tooltips differently */
+.d3-tip.n:after {
+  margin: -1px 0 0 0;
+  top: 100%;
+  left: 0;
+}
+
 </style>
 <body>
 <script src="//d3js.org/d3.v3.min.js"></script>
+<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
 <script>
 
 //elements of stacked bar graph
 var code = ["SP.DYN.LE00.FE.IN", "SP.DYN.LE00.MA.IN"];
 
 // set the dimensions of the canvas
-var margin = {top: 20, right: 50, bottom: 150, left: 50},
+var margin = {top: 40, right: 100, bottom: 150, left: 50},
     width = 1000 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
 
@@ -58,7 +88,7 @@ var svg = d3.select("body").append("svg")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 // load the data
-d3.json("data.json", function(error, data) {
+d3.json("JsonData_AsianCountries.json", function(error, data) {
   if (error) throw error;
 
   var layers = d3.layout.stack()(code.map(function(c) {
@@ -67,6 +97,15 @@ d3.json("data.json", function(error, data) {
     });
   }));
 
+  //adding tooltip
+  var tip = d3.tip()
+  .attr('class', 'd3-tip')
+  .offset([-10, 0])
+   .html(function(d) {
+    return "<span style='color:black'>" + d.y.toFixed(2) + "</span>";
+  });
+
+  svg.call(tip);
 
 // scale the range of the data
   x.domain(layers[0].map(function(d) { return d.x; }));
@@ -85,7 +124,9 @@ d3.json("data.json", function(error, data) {
       .attr("x", function(d) { return x(d.x); })
       .attr("y", function(d) { return y(d.y + d.y0); })
       .attr("height", function(d) { return y(d.y0) - y(d.y + d.y0); })
-      .attr("width", x.rangeBand() - 1);
+      .attr("width", x.rangeBand() - 1)
+      .on('mouseover', tip.show)
+      .on('mouseout', tip.hide);
 
   // add axis
   svg.append("g")
@@ -107,5 +148,42 @@ d3.json("data.json", function(error, data) {
       .attr("y", 5)
       .attr("dy", ".71em")
       .style("text-anchor", "end");
+
 });
+
+//setting title of the graph
+ svg.append("text")
+        .attr("x", (width / 2))             
+        .attr("y", 0 - (margin.top / 2))
+        .attr("text-anchor", "middle")  
+        .style("font-size", "20px") 
+        .style("text-decoration", "underline")  
+        .text("Average Life expectancy at birth (male and female) for asian countries");
+
+//adding legend
+var legend = svg.selectAll(".legend")
+  .data(z)
+  .enter().append("g")
+  .attr("class", "legend")
+  .attr("transform", function(d, i) { return "translate(30," + i * 19 + ")"; });
+ 
+legend.append("rect")
+  .attr("x", width - 30)
+  .attr("width", 30)
+  .attr("height", 18)
+  .style("fill", function(d, i) {return z.slice()[i];});
+ 
+legend.append("text")
+  .attr("x", width + 5)
+  .attr("y", 9)
+  .attr("dy", ".35em")
+  .style("text-anchor", "start")
+  .text(function(d, i) { 
+    switch (i) {
+      case 0: return "Female";
+      case 1: return "Male";
+    }
+  });
+
+
 </script>
