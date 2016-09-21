@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.axis text {
+  font: 10px sans-serif;
+}
+
+.axis line,
+.axis path {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.axis--x path {
+  display: none;
+}
+
+</style>
+<body>
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script>
+
+//elements of stacked bar graph
+var code = ["SP.DYN.LE00.FE.IN", "SP.DYN.LE00.MA.IN"];
+
+// set the dimensions of the canvas
+var margin = {top: 20, right: 50, bottom: 150, left: 50},
+    width = 1000 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+// set the ranges
+var x = d3.scale.ordinal()
+    .rangeRoundBands([0, width]);
+
+var y = d3.scale.linear()
+    .rangeRound([height, 0]);
+
+//color of stacked bar
+var z = ['red', 'black'];
+
+// define the axis
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+
+// add the SVG element
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+// load the data
+d3.json("data.json", function(error, data) {
+  if (error) throw error;
+
+  var layers = d3.layout.stack()(code.map(function(c) {
+    return data.map(function(d) {
+      return {x: d.countryName, y: d[c]};
+    });
+  }));
+
+
+// scale the range of the data
+  x.domain(layers[0].map(function(d) { return d.x; }));
+  y.domain([0, d3.max(layers[layers.length - 1], function(d) { return d.y0 + d.y; })]).nice();
+
+ // Add stacked bar chart
+  var layer = svg.selectAll(".layer")
+      .data(layers)
+      .enter().append("g")
+      .attr("class", "layer")
+      .style("fill", function(d, i) { return z[i]; });
+
+  layer.selectAll("rect")
+      .data(function(d) { return d; })
+      .enter().append("rect")
+      .attr("x", function(d) { return x(d.x); })
+      .attr("y", function(d) { return y(d.y + d.y0); })
+      .attr("height", function(d) { return y(d.y0) - y(d.y + d.y0); })
+      .attr("width", x.rangeBand() - 1);
+
+  // add axis
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+      .selectAll("text")
+      .style("text-anchor", "end")
+      .attr("dx", "-.8em")
+      .attr("dy", "-.55em")
+      .attr("transform", "rotate(-90)" );
+      
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+      .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 5)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end");
+});
+</script>
