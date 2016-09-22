@@ -91,7 +91,7 @@ var svg = d3.select("body").append("svg")
           "translate(" + margin.left + "," + margin.top + ")");
 // load the data
 d3.json("JsonData_TopFiveCountries.json", function(error, data) {
-
+    console.log(data);
     data.forEach(function(d) {
         d.countryName = d.countryName;
         d.total = +d.total.toFixed(2);

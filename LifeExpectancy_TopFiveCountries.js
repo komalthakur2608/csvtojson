@@ -18,18 +18,21 @@ var rl = readline.createInterface({
 var lineNum = 1;
 var countries = [];
 var mainArray = [];
+var header = [];
 rl.on('line', function(line){
 	if(lineNum === 1) {
+		header = line.split(',');
 	}
 	else {
 		var commaRemovedLine = line.replace(/"[^"]+"/g, function (match) {return match.replace(/,/g, '');});// removing comma from between the quotes
 		var arr = commaRemovedLine.split(','); 
 		if(arr.length == 6){ // if all columns are present
 
-			var countryName = arr[0];
-			var year = arr[4];
-			var indicatorCode = arr[3];
-			var indicatorValue = arr[5];
+			var countryName = arr[header.indexOf('CountryName')];
+			var year = arr[header.indexOf('Year')];
+			var indicatorCode = arr[header.indexOf('IndicatorCode')];
+			var indicatorValue = arr[header.indexOf('Value')];
+			
 			if(countries.indexOf(countryName)<0) {
 				countries.push(countryName);
 				countryTotal = {};
